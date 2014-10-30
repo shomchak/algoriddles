@@ -25,4 +25,4 @@ mergeCount left right
     where l                         = head left
           r                         = head right
           (rest_left, count_left)   = mergeCount (tail left) right
-          (rest_right, count_right) = (mergeCount left $ tail right)
+          (rest_right, count_right) = mergeCount left $ tail right
