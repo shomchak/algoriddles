@@ -1,14 +1,15 @@
-module Merge where
+module Merge (sort) where
 import Data.List (splitAt)
 
+-- | Merge sort.
 sort :: Ord a => [a] -> [a]
 sort []     = []
 sort (x:[]) = [x]
 sort xs     = merge (sort left) (sort right)
   where (left, right) = splitAt (length xs `quot` 2) xs
 
+-- | Merge two sorted lists.
 merge :: Ord a => [a] -> [a] -> [a]
-merge [] []   = []
 merge xs []   = xs
 merge [] ys   = ys
 merge left right
