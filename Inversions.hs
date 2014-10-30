@@ -7,22 +7,22 @@ inversions = snd . sortCount
 
 -- | Sort a list using merge sort, and count the inversions.
 sortCount :: Ord a => [a] -> ([a], Int)
-sortCount []     = ([], 0)
+sortCount []     = ([],  0)
 sortCount (x:[]) = ([x], 0)
-sortCount xs     = (l, split_count + count_left + count_right)
-  where (left, right)          = splitAt (length xs `quot` 2) xs
-        (l_left, count_left)   = sortCount left
-        (l_right, count_right) = sortCount right
-        (l, split_count)       = mergeCount l_left l_right
+sortCount xs     = (l,   split_count + left_count + right_count)
+  where (left,    right)       = splitAt (length xs `quot` 2) xs
+        (left_l,  left_count)  = sortCount left
+        (right_l, right_count) = sortCount right
+        (l,       split_count) = mergeCount left_l right_l
 
--- | Merge two sorted lists, counting the inversions.
+-- | Merge two sorted lists, count the split inversions.
 mergeCount :: Ord a => [a] -> [a] -> ([a], Int)
-mergeCount xs []   = (xs, 0)
-mergeCount [] ys   = (ys, 0)
+mergeCount xs [] = (xs, 0)
+mergeCount [] ys = (ys, 0)
 mergeCount left right
-  | l <= r    = (l:rest_left, count_left)
-  | otherwise = (r:rest_right, (length left) + count_right)
+  | l <= r       = (l:left_rest,  left_count)
+  | otherwise    = (r:right_rest, right_count + length left)
     where l                         = head left
           r                         = head right
-          (rest_left, count_left)   = mergeCount (tail left) right
-          (rest_right, count_right) = mergeCount left $ tail right
+          (left_rest,  left_count)  = mergeCount (tail left) right
+          (right_rest, right_count) = mergeCount left $ tail right
