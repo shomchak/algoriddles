@@ -9,8 +9,8 @@ sort xs     = merge (sort left) (sort right)
 
 merge :: Ord a => [a] -> [a] -> [a]
 merge [] []   = []
-merge xs []  = xs
-merge [] ys  = ys
+merge xs []   = xs
+merge [] ys   = ys
 merge left right
   | l <= r    = l : (merge (tail left) right)
   | otherwise = r : (merge left $ tail right)
