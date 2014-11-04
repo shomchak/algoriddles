@@ -1,5 +1,4 @@
 module Quick (sort) where
-import Data.List (splitAt)
 
 -- | Quick sort.
 sort :: Ord a => [a] -> [a]
