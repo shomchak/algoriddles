@@ -38,23 +38,11 @@ stepPartition (PartitionState i j xs@(pivot:rest)) =
                 (h:hs)         = drop (j+1) xs
                 reordered      = less ++ [h] ++ lefts ++ [g] ++ hs
 
-
--- partition :: Ord a => [a] -> [a]
--- partition []  = []
--- partition [x] = x
--- partition xs = do
---   j <- [1..length xs - 1]
-
-
--- partitionStep :: Ord a => [a] -> Int -> Int -> [a]
--- partitionStep xs@(pivot:rest) i j
---   | i' > j'              = partition xs j j
---   | j == length xs - 1 = xs
---   | otherwise          =
---     where i' = max i 0
---           j' = min j $ length xs - 1
-
-
+-- | Partition a list with the pivot as the first element.
+partition :: Ord a => [a] -> [a]
+partition xs = l
+  where PartitionState _ _ l =
+          iterate stepPartition (initPartition xs) !! length xs
 
 swapEdge :: [a] -> [a]
 swapEdge [] = []
