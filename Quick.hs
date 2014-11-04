@@ -1,6 +1,5 @@
 module Quick (sort) where
 import Data.List (splitAt)
-import Control.Monad (when)
 
 -- | Quick sort.
 sort :: Ord a => [a] -> [a]
