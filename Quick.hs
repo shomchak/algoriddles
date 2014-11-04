@@ -7,6 +7,11 @@ sort (pivot:rest) = sort lessers ++ [pivot] ++ sort greaters
   where lessers   = filter (<=pivot) rest
         greaters  = filter (>pivot)  rest
 
+-- sort' :: Ord a => [a] -> [a]
+-- sort' []           = []
+-- sort' (pivot:rest) = sort' lessers ++ [pivot] ++ sort greaters
+--   where lessers = 
+
 -- | A type representing the state of partitioning of a specific partition
 -- scheme. For a PartitionState i j [a],
 -- i is the index of the last value <= the pivot (starts at 0, the pivot);
@@ -26,8 +31,7 @@ stepPartition :: Ord a => PartitionState a -> PartitionState a
 stepPartition (PartitionState i j [])              = PartitionState i j []
 stepPartition (PartitionState i j xs@(pivot:rest)) =
   case drop (j+1) xs of
-    [] -> PartitionState i j $ swapEdge less ++ greater
-      where (less, greater) = splitAt (i+1) xs
+    [] -> PartitionState i j xs
     _  -> case xs !! (j+1) > pivot of
       True  -> PartitionState i (j+1) xs
       False -> case i == j of
@@ -39,9 +43,10 @@ stepPartition (PartitionState i j xs@(pivot:rest)) =
                 reordered      = less ++ [h] ++ lefts ++ [g] ++ hs
 
 -- | Partition a list with the pivot as the first element.
-partition :: Ord a => [a] -> [a]
-partition xs = l
-  where PartitionState _ _ l =
+partition :: Ord a => [a] -> ([a], [a])
+partition [] = ([], [])
+partition xs = splitAt i rest
+  where PartitionState i _ (_:rest) =
           iterate stepPartition (initPartition xs) !! length xs
 
 swapEdge :: [a] -> [a]
