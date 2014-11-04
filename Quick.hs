@@ -1,4 +1,4 @@
-module Quick (sort) where
+module Quick (sort, sort') where
 
 -- | Quick sort.
 sort :: Ord a => [a] -> [a]
@@ -7,10 +7,11 @@ sort (pivot:rest) = sort lessers ++ [pivot] ++ sort greaters
   where lessers   = filter (<=pivot) rest
         greaters  = filter (>pivot)  rest
 
--- sort' :: Ord a => [a] -> [a]
--- sort' []           = []
--- sort' (pivot:rest) = sort' lessers ++ [pivot] ++ sort greaters
---   where lessers = 
+-- | Quick sort using the specific partition scheme below.
+sort' :: Ord a => [a] -> [a]
+sort' []           = []
+sort' xs@(pivot:_) = sort' lessers ++ [pivot] ++ sort greaters
+  where (lessers, greaters) = partition xs
 
 -- | A type representing the state of partitioning of a specific partition
 -- scheme. For a PartitionState i j [a],
@@ -49,10 +50,12 @@ partition xs = splitAt i rest
   where PartitionState i _ (_:rest) =
           iterate stepPartition (initPartition xs) !! length xs
 
+-- | Swap the first and last elements of a list.
 swapEdge :: [a] -> [a]
 swapEdge [] = []
 swapEdge (x:xs) = rightShift xs ++ [x]
 
+-- | Shift a list one element to the right.
 rightShift :: [a] -> [a]
 rightShift [] = []
 rightShift xs = let n = length xs - 1 in xs !! n : take n xs
