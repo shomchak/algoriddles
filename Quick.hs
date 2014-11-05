@@ -51,13 +51,3 @@ swap i j xs = zipWith new_el [0..length xs - 1] xs
   where new_el k x | k == i    = xs !! j
                    | k == j    = xs !! i
                    | otherwise = x
-
--- | Swap the first and last elements of a list.
-swapEdge :: [a] -> [a]
-swapEdge [] = []
-swapEdge (x:xs) = rightShift xs ++ [x]
-
--- | Shift a list one element to the right.
-rightShift :: [a] -> [a]
-rightShift [] = []
-rightShift xs = let n = length xs - 1 in xs !! n : take n xs
