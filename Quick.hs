@@ -29,18 +29,12 @@ initPartition = PartitionState 0 0
 -- | Perform one step of the partition computation.
 stepPartition :: Ord a => PartitionState a -> PartitionState a
 stepPartition (PartitionState i j [])              = PartitionState i j []
-stepPartition (PartitionState i j xs@(pivot:rest)) =
+stepPartition (PartitionState i j xs@(pivot:_)) =
   case drop (j+1) xs of
     [] -> PartitionState i j xs
     _  -> case xs !! (j+1) > pivot of
       True  -> PartitionState i (j+1) xs
-      False -> case i == j of
-        True  -> PartitionState (i+1) (j+1) xs
-        False -> PartitionState (i+1) (j+1) reordered
-          where (less, (g:gs)) = splitAt (i+1) xs
-                lefts          = take (j-i-1) gs
-                (h:hs)         = drop (j+1) xs
-                reordered      = less ++ [h] ++ lefts ++ [g] ++ hs
+      False -> PartitionState (i+1) (j+1) $ swap (i+1) (j+1) xs
 
 -- | Partition a list with the pivot as the first element.
 partition :: Ord a => [a] -> ([a], [a])
@@ -48,6 +42,15 @@ partition [] = ([], [])
 partition xs = splitAt i rest
   where PartitionState i _ (_:rest) =
           iterate stepPartition (initPartition xs) !! length xs
+
+-- | Swap two elements of a list. This function is partial as it is undefined
+-- for list indices outside the range [0, length-1], but it only called from
+-- stepPartition which always uses safe indices.
+swap :: Int -> Int -> [a] -> [a]
+swap i j xs = zipWith new_el [0..length xs - 1] xs
+  where new_el k x | k == i    = xs !! j
+                   | k == j    = xs !! i
+                   | otherwise = x
 
 -- | Swap the first and last elements of a list.
 swapEdge :: [a] -> [a]
