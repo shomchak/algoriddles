@@ -14,7 +14,7 @@ sort' xs@(pivot:_) = sort' lessers ++ [pivot] ++ sort greaters
   where (lessers, greaters) = partition xs
 
 -- | A type representing the state of partitioning of a specific partition
--- scheme. For a PartitionState i j [a],
+-- scheme where the pivot is the first element. For a PartitionState i j [a],
 -- i is the index of the last value <= the pivot (starts at 0, the pivot);
 -- j is the index of the last value processed (starts at 0).
 -- The hiding of the value constructor in combination with provided methods
@@ -22,8 +22,7 @@ sort' xs@(pivot:_) = sort' lessers ++ [pivot] ++ sort greaters
 data PartitionState a = PartitionState Int Int [a]
                         deriving (Show, Read, Eq)
 
--- | Produce a the initial state of a partition computation from a list
--- where the pivot is the first element.
+-- | Produce a the initial state of a partition computation from a list.
 initPartition :: Ord a => [a] -> PartitionState a
 initPartition = PartitionState 0 0
 
