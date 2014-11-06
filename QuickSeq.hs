@@ -1,3 +1,5 @@
+{-# LANGUAGE BangPatterns #-}
+
 -- Implementations of quick sort using sequences under the hood.
 
 module QuickSeq ( sort
@@ -43,29 +45,31 @@ sortSeq' xs = case S.viewl xs of
 data PartitionState a = PS Int Int (S.Seq a)
                         deriving (Show, Read, Eq)
 
+newtype PartitionState' a = PS' (Int, Int, S.Seq a)
+
 -- | Produce a the initial state of a partition computation from a list.
-initP :: Ord a => S.Seq a -> PartitionState a
-initP = PS 0 0
+initP :: Ord a => S.Seq a -> PartitionState' a
+initP xs = PS' (0, 0, xs)
 
 -- | Perform one step of the partition computation.
-stepP :: Ord a => PartitionState a -> PartitionState a
-stepP (PS i j xs) = case S.viewl xs of
-  S.EmptyL -> PS i j xs  -- Do nothing for an empty sequence
+stepP :: Ord a => PartitionState' a -> PartitionState' a
+stepP !(PS' !(!i, !j, !xs)) = case S.viewl xs of
+  S.EmptyL -> PS' (i, j, xs)  -- Do nothing for an empty sequence
   pivot:<_ -> case S.length xs == (j+1) of
-    True  -> PS i j xs   -- Do nothing if we have processed all elements
+    True  -> PS' (i, j, xs)   -- Do nothing if we have processed all elements
     False -> case S.index xs (j+1) > pivot of
-      True  -> PS i (j+1) xs
-      False -> PS (i+1) (j+1) $
-        S.update j' (S.index xs i') (S.update i' (S.index xs j') xs)
+      True  -> PS' (i, (j+1), xs)
+      False -> PS' ((i+1), (j+1),
+        S.update j' (S.index xs i') (S.update i' (S.index xs j') xs))
           where i' = succ i
                 j' = succ j
 
 -- | Partition a Sequence with the pivot as the first element.
 partition :: Ord a => S.Seq a -> (S.Seq a, S.Seq a)
-partition xs = case S.viewl xs of
+partition !xs = case S.viewl xs of
   S.EmptyL -> (S.empty, S.empty)
   _        -> S.splitAt i rest
-    where PS i _ sorted = applyN (S.length xs) stepP (initP xs)
+    where PS' (i, _, sorted) = applyN (S.length xs) stepP (initP xs)
           (_:<rest)     = S.viewl sorted
 
 -- | Apply a function n times.
