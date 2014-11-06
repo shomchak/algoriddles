@@ -68,5 +68,6 @@ partition xs = case S.viewl xs of
     where PS i _ sorted = applyN (S.length xs) stepP (initP xs)
           (_:<rest)     = S.viewl sorted
 
+-- | Apply a function n times.
 applyN :: Int -> (a -> a) -> a -> a
 applyN n f x = foldl' (flip ($)) x (replicate n f)
