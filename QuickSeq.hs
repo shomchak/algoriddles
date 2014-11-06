@@ -47,17 +47,14 @@ stepPartition :: Ord a => PartitionState a -> PartitionState a
 stepPartition (PartitionState i j xs) =
   case S.viewl xs of
     S.EmptyL -> PartitionState i j xs
-    pivot:<_ ->
-      case S.length xs == (j+1) of
-        True  -> PartitionState i j xs
-        False ->
-          case S.index xs (j+1) > pivot of
-            True  -> PartitionState i (j+1) xs
-            False ->
-              PartitionState (i+1) (j+1) $
-                S.update j' (S.index xs i') (S.update i' (S.index xs j') xs)
-                  where i' = i+1
-                        j' = j+1
+    pivot:<_ -> case S.length xs == (j+1) of
+      True  -> PartitionState i j xs
+      False -> case S.index xs (j+1) > pivot of
+        True  -> PartitionState i (j+1) xs
+        False -> PartitionState (i+1) (j+1) $
+          S.update j' (S.index xs i') (S.update i' (S.index xs j') xs)
+            where i' = i+1
+                  j' = j+1
 
 --stepPartition (PartitionState i j xs@(pivot:<_)) =
 --  case S.drop (j+1) xs of
