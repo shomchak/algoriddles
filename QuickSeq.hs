@@ -3,31 +3,31 @@
 module QuickSeq (sort, ) where
 import qualified Data.Sequence as S
 import Data.Sequence (ViewL((:<)), (><))
-import Data.Foldable (toList)
+import qualified Data.Foldable as F
 
 -- | Quick sort. Converts a list to a sequence to perform the sorting.
 sort :: Ord a => [a] -> [a]
-sort = toList . sortSeq . S.viewl . S.fromList
+sort = F.toList . sortSeq . S.fromList
 
 -- | Sort a sequence using quick sort. Takes a ViewL for pattern matching.
-sortSeq :: Ord a => S.ViewL a -> S.Seq a
-sortSeq S.EmptyL    = S.empty
-sortSeq (p:<rest) = sortSeq lessers >< S.singleton p >< sortSeq greaters
-  where lessers   = S.viewl $ S.filter (<=p) rest
-        greaters  = S.viewl $ S.filter (>p)  rest
+sortSeq :: Ord a => S.Seq a -> S.Seq a
+sortSeq xs = case S.viewl xs of
+  S.EmptyL      -> S.empty
+  (pivot:<rest) -> sortSeq lessers >< S.singleton pivot >< sortSeq greaters
+    where lessers  = S.filter (<=pivot) rest
+          greaters = S.filter (>pivot)  rest
 
----- | Quick sort using the specific partition scheme below.
---sort' :: Ord a => [a] -> [a]
---sort' []           = []
---sort' xs@(pivot:_) = sort' lessers ++ [pivot] ++ sort' greaters
---  where (lessers, greaters) = partition xs
+-- | Quick sort using the specific partition scheme below.
+sort' :: Ord a => [a] -> [a]
+sort' = F.toList . sortSeq' . S.fromList
 
----- | Sort a sequence using quick sort. Takes a ViewL for pattern matching.
---sortSeq' :: Ord a => S.ViewL a -> S.Seq a
---sortSeq' S.EmptyL    = S.empty
---sortSeq' (p:<rest) = sortSeq' lessers >< S.singleton p >< sortSeq' greaters
---  where lessers    = S.viewl $ S.filter (<=p) rest
---        greaters   = S.viewl $ S.filter (>p)  rest
+-- | Sort a sequence using quick sort. Takes a ViewL for pattern matching.
+sortSeq' :: Ord a => S.Seq a -> S.Seq a
+sortSeq' xs = case S.viewl xs of
+  S.EmptyL  -> S.empty
+  (p:<_)    -> sortSeq' lessers >< S.singleton p >< sortSeq' greaters
+    where (lessers, greaters) = partition xs
+
 
 -- | A type representing the state of partitioning of a specific partition
 -- scheme where the pivot is the first element. For a PartitionState i j S.Seq a,
@@ -58,16 +58,9 @@ stepPartition (PartitionState i j xs) =
 
 -- | Partition a list with the pivot as the first element.
 partition :: Ord a => S.Seq a -> (S.Seq a, S.Seq a)
-partition xs = S.splitAt i rest
-  where PartitionState i _ sorted =
-          iterate stepPartition (initPartition xs) !! S.length xs
-        (_:<rest)                 = S.viewl sorted
-
----- | Swap two elements of a list. This function is partial as it is undefined
----- for list indices outside the range [0, length-1], but it only called from
----- stepPartition which always uses safe indices.
---swap :: Int -> Int -> [a] -> [a]
---swap i j xs = zipWith new_el [0..length xs - 1] xs
---  where new_el k x | k == i    = xs !! j
---                   | k == j    = xs !! i
---                   | otherwise = x
+partition xs = case S.viewl xs of
+  S.EmptyL -> (S.empty, S.empty)
+  _        -> S.splitAt i rest
+    where PartitionState i _ sorted =
+            iterate stepPartition (initPartition xs) !! S.length xs
+          (_:<rest) = S.viewl sorted
