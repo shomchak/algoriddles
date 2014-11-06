@@ -9,12 +9,13 @@ module QuickSeq ( sort
 import qualified Data.Sequence as S
 import Data.Sequence (ViewL((:<)), (><))
 import qualified Data.Foldable as F
+import Data.List (foldl')
 
 -- | Quick sort. Converts a list to a sequence to perform the sorting.
 sort :: Ord a => [a] -> [a]
 sort = F.toList . sortSeq . S.fromList
 
--- | Sort a sequence using quick sort. Takes a ViewL for pattern matching.
+-- | Sort a sequence using quick sort.
 sortSeq :: Ord a => S.Seq a -> S.Seq a
 sortSeq xs = case S.viewl xs of
   S.EmptyL      -> S.empty
@@ -26,13 +27,12 @@ sortSeq xs = case S.viewl xs of
 sort' :: Ord a => [a] -> [a]
 sort' = F.toList . sortSeq' . S.fromList
 
--- | Sort a sequence using quick sort. Takes a ViewL for pattern matching.
+-- | Sort a sequence using quick sort.
 sortSeq' :: Ord a => S.Seq a -> S.Seq a
 sortSeq' xs = case S.viewl xs of
   S.EmptyL  -> S.empty
   (p:<_)    -> sortSeq' lessers >< S.singleton p >< sortSeq' greaters
     where (lessers, greaters) = partition xs
-
 
 -- | A type representing the state of partitioning of a specific partition
 -- scheme where the pivot is the first element. For a PS i j S.Seq a,
@@ -50,20 +50,23 @@ initP = PS 0 0
 -- | Perform one step of the partition computation.
 stepP :: Ord a => PartitionState a -> PartitionState a
 stepP (PS i j xs) = case S.viewl xs of
-  S.EmptyL -> PS i j xs
+  S.EmptyL -> PS i j xs  -- Do nothing for an empty sequence
   pivot:<_ -> case S.length xs == (j+1) of
-    True  -> PS i j xs
+    True  -> PS i j xs   -- Do nothing if we have processed all elements
     False -> case S.index xs (j+1) > pivot of
       True  -> PS i (j+1) xs
       False -> PS (i+1) (j+1) $
         S.update j' (S.index xs i') (S.update i' (S.index xs j') xs)
-          where i' = i+1
-                j' = j+1
+          where i' = succ i
+                j' = succ j
 
 -- | Partition a Sequence with the pivot as the first element.
 partition :: Ord a => S.Seq a -> (S.Seq a, S.Seq a)
 partition xs = case S.viewl xs of
   S.EmptyL -> (S.empty, S.empty)
   _        -> S.splitAt i rest
-    where PS i _ sorted = iterate stepP (initP xs) !! S.length xs
+    where PS i _ sorted = applyN (S.length xs) stepP (initP xs)
           (_:<rest)     = S.viewl sorted
+
+applyN :: Int -> (a -> a) -> a -> a
+applyN n f x = foldl' (flip ($)) x (replicate n f)
