@@ -30,7 +30,7 @@ sortSeq (p:<rest) = sortSeq lessers >< S.singleton p >< sortSeq greaters
 --        greaters   = S.viewl $ S.filter (>p)  rest
 
 -- | A type representing the state of partitioning of a specific partition
--- scheme where the pivot is the first element. For a PartitionState i j [a],
+-- scheme where the pivot is the first element. For a PartitionState i j S.Seq a,
 -- i is the index of the last value <= the pivot (starts at 0, the pivot);
 -- j is the index of the last value processed (starts at 0).
 -- The hiding of the value constructor in combination with provided methods
@@ -39,8 +39,8 @@ data PartitionState a = PartitionState Int Int (S.Seq a)
                         deriving (Show, Read, Eq)
 
 -- | Produce a the initial state of a partition computation from a list.
-initPartition :: Ord a => [a] -> PartitionState a
-initPartition = PartitionState 0 0 . S.fromList
+initPartition :: Ord a => S.Seq a -> PartitionState a
+initPartition = PartitionState 0 0
 
 -- | Perform one step of the partition computation.
 stepPartition :: Ord a => PartitionState a -> PartitionState a
@@ -56,19 +56,12 @@ stepPartition (PartitionState i j xs) =
             where i' = i+1
                   j' = j+1
 
---stepPartition (PartitionState i j xs@(pivot:<_)) =
---  case S.drop (j+1) xs of
---    [] -> PartitionState i j xs
---    _  -> case xs !! (j+1) > pivot of
---      True  -> PartitionState i (j+1) xs
---      False -> PartitionState (i+1) (j+1) $ swap (i+1) (j+1) xs
-
----- | Partition a list with the pivot as the first element.
---partition :: Ord a => [a] -> ([a], [a])
---partition [] = ([], [])
---partition xs = splitAt i rest
---  where PartitionState i _ (_:rest) =
---          iterate stepPartition (initPartition xs) !! length xs
+-- | Partition a list with the pivot as the first element.
+partition :: Ord a => S.Seq a -> (S.Seq a, S.Seq a)
+partition xs = S.splitAt i rest
+  where PartitionState i _ sorted =
+          iterate stepPartition (initPartition xs) !! S.length xs
+        (_:<rest)                 = S.viewl sorted
 
 ---- | Swap two elements of a list. This function is partial as it is undefined
 ---- for list indices outside the range [0, length-1], but it only called from
