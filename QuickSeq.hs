@@ -71,11 +71,7 @@ stepP (PS i j xs) = case S.viewl xs of
 
 -- | Partition a Sequence with the pivot as the first element.
 partition :: Ord a => S.Seq a -> (S.Seq a, S.Seq a)
-partition xs = case S.viewl xs of
-  S.EmptyL -> (S.empty, S.empty)
-  _        -> S.splitAt i rest
-    where PS i _ sorted = applyN (S.length xs) stepP (initP xs)
-          (_:<rest)     = S.viewl sorted
+partition = partitionWith $ const 0
 
 -- | Partition a Sequence with the pivot as the first element.
 partitionWith :: Ord a => (S.Seq a -> Int) -> S.Seq a -> (S.Seq a, S.Seq a)
