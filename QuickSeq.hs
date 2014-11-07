@@ -30,13 +30,15 @@ sort' = F.toList . sortSeq' . S.fromList
 -- | Sort a sequence using quick sort.
 sortSeq' :: Ord a => S.Seq a -> S.Seq a
 sortSeq' xs = case S.viewl xs of
-  S.EmptyL  -> S.empty
-  (p:<_)    -> sortSeq' lessers >< S.singleton p >< sortSeq' greaters
+  S.EmptyL -> S.empty
+  (p:<_)   -> sortSeq' lessers >< S.singleton p >< sortSeq' greaters
     where (lessers, greaters) = partition xs
 
+-- | Return the number of comparisons required to sort the list.
 sortCount :: Ord a => [a] -> Int
 sortCount = sortCountSeq . S.fromList
 
+-- | Return the number of comparisons required to sort the sequence.
 sortCountSeq :: Ord a => S.Seq a -> Int
 sortCountSeq xs = case S.viewl xs of
   S.EmptyL -> 0
