@@ -34,6 +34,15 @@ sortSeq' xs = case S.viewl xs of
   (p:<_)    -> sortSeq' lessers >< S.singleton p >< sortSeq' greaters
     where (lessers, greaters) = partition xs
 
+sortCount :: Ord a => [a] -> Int
+sortCount = sortCountSeq . S.fromList
+
+sortCountSeq :: Ord a => S.Seq a -> Int
+sortCountSeq xs = case S.viewl xs of
+  S.EmptyL -> 0
+  (p:<_)   -> sortCountSeq lessers + sortCountSeq greaters + S.length xs - 1
+    where (lessers, greaters) = partition xs
+
 -- | A type representing the state of partitioning of a specific partition
 -- scheme where the pivot is the first element. For a PS i j S.Seq a,
 -- i is the index of the last value <= the pivot (starts at 0, the pivot);
