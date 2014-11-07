@@ -13,10 +13,10 @@ sort' []           = []
 sort' xs@(pivot:_) = sort' lessers ++ [pivot] ++ sort greaters
   where (lessers, greaters, _) = partition xs
 
--- sortCount :: Ord a => [a] -> Int
--- sortCount [] = 0
--- sortCount xs@(pivot:_) = g
---   where (lessers, greaters) = partition xs
+sortCount :: Ord a => [a] -> Int
+sortCount [] = 0
+sortCount xs@(pivot:_) = sortCount lessers + sortCount greaters + count
+  where (lessers, greaters, count) = partition xs
 
 
 -- | A type representing the state of partitioning of a specific partition
