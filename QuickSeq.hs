@@ -4,6 +4,7 @@ module QuickSeq ( sort
                 , sortSeq
                 , sort'
                 , sortSeq'
+                , sortCount
                 ) where
 
 import qualified Data.Sequence as S
@@ -45,6 +46,10 @@ sortCountSeq xs = case S.viewl xs of
   (p:<_)   -> sortCountSeq lessers + sortCountSeq greaters + S.length xs - 1
     where (lessers, greaters) = partition xs
 
+-- setPivot :: Ord a => (S.Seq a -> Int) => S.Seq a -> S.Seq a
+-- setPivot f xs = S.update 0 (S.index xs n) (S.update n (S.index xs 0))
+--   where n = f xs
+
 -- | A type representing the state of partitioning of a specific partition
 -- scheme where the pivot is the first element. For a PS i j S.Seq a,
 -- i is the index of the last value <= the pivot (starts at 0, the pivot);
@@ -66,10 +71,7 @@ stepP (PS i j xs) = case S.viewl xs of
     True  -> PS i j xs   -- Do nothing if we have processed all elements
     False -> case S.index xs (j+1) > pivot of
       True  -> PS i (j+1) xs
-      False -> PS (i+1) (j+1) $
-        S.update j' (S.index xs i') (S.update i' (S.index xs j') xs)
-          where i' = succ i
-                j' = succ j
+      False -> PS (i+1) (j+1) $ swap (i+1) (j+1) xs
 
 -- | Partition a Sequence with the pivot as the first element.
 partition :: Ord a => S.Seq a -> (S.Seq a, S.Seq a)
@@ -82,3 +84,10 @@ partition xs = case S.viewl xs of
 -- | Apply a function n times.
 applyN :: Int -> (a -> a) -> a -> a
 applyN n f x = foldl' (flip ($)) x (replicate n f)
+
+-- | Swap two elements of a list. This function is partial as it is undefined
+-- for list indices outside the range [0, length-1], but it only called from
+-- stepPartition which always uses safe indices.
+swap :: Int -> Int -> S.Seq a -> S.Seq a
+swap i j xs = S.update j (S.index xs i) (S.update i (S.index xs j) xs)
+
