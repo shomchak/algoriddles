@@ -13,11 +13,11 @@ sort' []           = []
 sort' xs@(pivot:_) = sort' lessers ++ [pivot] ++ sort greaters
   where (lessers, greaters, _) = partition xs
 
+-- | Return the number of comparisons required to sort the list.
 sortCount :: Ord a => [a] -> Int
 sortCount [] = 0
 sortCount xs@(pivot:_) = sortCount lessers + sortCount greaters + count
   where (lessers, greaters, count) = partition xs
-
 
 -- | A type representing the state of partitioning of a specific partition
 -- scheme where the pivot is the first element. For a PartitionState i j [a],
@@ -34,7 +34,7 @@ initPartition = PartitionState 0 0
 
 -- | Perform one step of the partition computation.
 stepPartition :: Ord a => PartitionState a -> PartitionState a
-stepPartition (PartitionState i j [])              = PartitionState i j []
+stepPartition (PartitionState i j [])           = PartitionState i j []
 stepPartition (PartitionState i j xs@(pivot:_)) =
   case drop (j+1) xs of
     [] -> PartitionState i j xs
@@ -42,7 +42,8 @@ stepPartition (PartitionState i j xs@(pivot:_)) =
       True  -> PartitionState i (j+1) xs
       False -> PartitionState (i+1) (j+1) $ swap (i+1) (j+1) xs
 
--- | Partition a list with the pivot as the first element.
+-- | Partition a list with the pivot as the first element and return a tuple
+-- of (left-partition, right-partition, number-of-comparisons-made).
 partition :: Ord a => [a] -> ([a], [a], Int)
 partition [] = ([], [], 0)
 partition xs = (left, right, count)
@@ -50,9 +51,6 @@ partition xs = (left, right, count)
           iterate stepPartition (initPartition xs) !! (count + 1)
         (left, right)               = splitAt i rest
         count                       = length xs - 1
-
--- partitionCount :: Ord a => [a] -> ([a], [a], Int)
--- partitionCount xs = (left, right, count)
 
 -- | Swap two elements of a list. This function is partial as it is undefined
 -- for list indices outside the range [0, length-1], but it only called from
