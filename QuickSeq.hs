@@ -46,10 +46,6 @@ sortCountSeq xs = case S.viewl xs of
   (p:<_)   -> sortCountSeq lessers + sortCountSeq greaters + S.length xs - 1
     where (lessers, greaters) = partition xs
 
--- setPivot :: Ord a => (S.Seq a -> Int) => S.Seq a -> S.Seq a
--- setPivot f xs = S.update 0 (S.index xs n) (S.update n (S.index xs 0))
---   where n = f xs
-
 -- | A type representing the state of partitioning of a specific partition
 -- scheme where the pivot is the first element. For a PS i j S.Seq a,
 -- i is the index of the last value <= the pivot (starts at 0, the pivot);
@@ -81,9 +77,22 @@ partition xs = case S.viewl xs of
     where PS i _ sorted = applyN (S.length xs) stepP (initP xs)
           (_:<rest)     = S.viewl sorted
 
+-- | Partition a Sequence with the pivot as the first element.
+partitionWith :: Ord a => (S.Seq a -> Int) -> S.Seq a -> (S.Seq a, S.Seq a)
+partitionWith f xs = case S.viewl xs of
+  S.EmptyL -> (S.empty, S.empty)
+  _        -> S.splitAt i rest
+    where PS i _ sorted = applyN (S.length xs) stepP (initP (setPivot f xs))
+          (_:<rest)     = S.viewl sorted
+
 -- | Apply a function n times.
 applyN :: Int -> (a -> a) -> a -> a
 applyN n f x = foldl' (flip ($)) x (replicate n f)
+
+-- | Given a function that takes a sequence to an index, return the sequence
+-- with that index and 0 swapped.
+setPivot :: Ord a => (S.Seq a -> Int) => S.Seq a -> S.Seq a
+setPivot f xs = swap 0 (f xs) xs
 
 -- | Swap two elements of a list. This function is partial as it is undefined
 -- for list indices outside the range [0, length-1], but it only called from
