@@ -1,10 +1,13 @@
+{-# OPTIONS_GHC -Wall #-}
+
 -- Implementations of quick sort using sequences under the hood.
 
 module QuickSeq ( sort
                 , sortSeq
                 , sort'
-                , sortSeq'
+                , sortWith'
                 , sortCount
+                , sortCountWith
                 ) where
 
 import qualified Data.Sequence as S
@@ -26,25 +29,35 @@ sortSeq xs = case S.viewl xs of
 
 -- | Quick sort using the specific partition scheme below.
 sort' :: Ord a => [a] -> [a]
-sort' = F.toList . sortSeq' . S.fromList
+sort' = sortWith' $ const 0
+
+sortWith' :: Ord a => (S.Seq a -> Int) -> [a] -> [a]
+sortWith' f = F.toList . sortSeqWith' f . S.fromList
 
 -- | Sort a sequence using quick sort.
-sortSeq' :: Ord a => S.Seq a -> S.Seq a
-sortSeq' xs = case S.viewl xs of
+sortSeqWith' :: Ord a => (S.Seq a -> Int) -> S.Seq a -> S.Seq a
+sortSeqWith' f xs = case S.viewl xs of
   S.EmptyL -> S.empty
-  (p:<_)   -> sortSeq' lessers >< S.singleton p >< sortSeq' greaters
-    where (lessers, greaters) = partition xs
+  _        -> sortSeqWith' f lessers >< S.singleton p >< sortSeqWith' f greaters
+    where (lessers, greaters) = partitionWith f xs
+          p                   = S.index xs (f xs)
 
 -- | Return the number of comparisons required to sort the list.
 sortCount :: Ord a => [a] -> Int
-sortCount = sortCountSeq . S.fromList
+sortCount = sortCountSeqWith (const 0) . S.fromList
+
+-- | Return the number of comparisons required to sort the list.
+sortCountWith :: Ord a => (S.Seq a -> Int) -> [a] -> Int
+sortCountWith f = sortCountSeqWith f . S.fromList
 
 -- | Return the number of comparisons required to sort the sequence.
-sortCountSeq :: Ord a => S.Seq a -> Int
-sortCountSeq xs = case S.viewl xs of
+sortCountSeqWith :: Ord a => (S.Seq a -> Int) -> S.Seq a -> Int
+sortCountSeqWith f xs = case S.viewl xs of
   S.EmptyL -> 0
-  (p:<_)   -> sortCountSeq lessers + sortCountSeq greaters + S.length xs - 1
-    where (lessers, greaters) = partition xs
+  _        -> sortCountSeqWith f lessers
+              + sortCountSeqWith f greaters
+              + S.length xs - 1
+    where (lessers, greaters) = partitionWith f xs
 
 -- | A type representing the state of partitioning of a specific partition
 -- scheme where the pivot is the first element. For a PS i j S.Seq a,
@@ -69,11 +82,7 @@ stepP (PS i j xs) = case S.viewl xs of
       True  -> PS i (j+1) xs
       False -> PS (i+1) (j+1) $ swap (i+1) (j+1) xs
 
--- | Partition a Sequence with the pivot as the first element.
-partition :: Ord a => S.Seq a -> (S.Seq a, S.Seq a)
-partition = partitionWith $ const 0
-
--- | Partition a Sequence with the pivot as the first element.
+-- | Partition a Sequence using a function to return the index of the pivot.
 partitionWith :: Ord a => (S.Seq a -> Int) -> S.Seq a -> (S.Seq a, S.Seq a)
 partitionWith f xs = case S.viewl xs of
   S.EmptyL -> (S.empty, S.empty)
