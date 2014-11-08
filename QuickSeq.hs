@@ -88,7 +88,7 @@ partitionWith :: Ord a => (S.Seq a -> Int) -> S.Seq a -> (S.Seq a, S.Seq a)
 partitionWith f xs = case S.viewl xs of
   S.EmptyL -> (S.empty, S.empty)
   _        -> S.splitAt i rest
-    where PS i _ sorted = applyN (S.length xs) stepP (initP (setPivot f xs))
+    where PS i _ sorted = applyN (S.length xs) (stepP . setPivot f) (initP xs)
           (_:<rest)     = S.viewl sorted
 
 -- | Apply a function n times.
@@ -97,8 +97,8 @@ applyN n f x = foldl' (flip ($)) x (replicate n f)
 
 -- | Given a function that takes a sequence to an index, return the sequence
 -- with that the elements at that index and 0 swapped.
-setPivot :: Ord a => (S.Seq a -> Int) => S.Seq a -> S.Seq a
-setPivot f xs = swap 0 (f xs) xs
+setPivot :: Ord a => (S.Seq a -> Int) => PartitionState a -> PartitionState a
+setPivot f (PS i j xs) = PS i j $ swap 0 (f xs) xs
 
 -- | Swap two elements of a sequence. This function is partial as it is
 -- undefined for sequence indices outside the range [0, length-1], but it only
