@@ -31,10 +31,11 @@ sortSeq xs = case S.viewl xs of
 sort' :: Ord a => [a] -> [a]
 sort' = sortWith' $ const 0
 
+-- | Sort using a function to return the pivot index.
 sortWith' :: Ord a => (S.Seq a -> Int) -> [a] -> [a]
 sortWith' f = F.toList . sortSeqWith' f . S.fromList
 
--- | Sort a sequence using quick sort.
+-- | Sort a sequence using a function to return the pivot index.
 sortSeqWith' :: Ord a => (S.Seq a -> Int) -> S.Seq a -> S.Seq a
 sortSeqWith' f xs = case S.viewl xs of
   S.EmptyL -> S.empty
@@ -46,11 +47,11 @@ sortSeqWith' f xs = case S.viewl xs of
 sortCount :: Ord a => [a] -> Int
 sortCount = sortCountSeqWith (const 0) . S.fromList
 
--- | Return the number of comparisons required to sort the list.
+-- | Like sortCount using a function to return the index of the pivot.
 sortCountWith :: Ord a => (S.Seq a -> Int) -> [a] -> Int
 sortCountWith f = sortCountSeqWith f . S.fromList
 
--- | Return the number of comparisons required to sort the sequence.
+-- | Like sortCountWith for sequences.
 sortCountSeqWith :: Ord a => (S.Seq a -> Int) -> S.Seq a -> Int
 sortCountSeqWith f xs = case S.viewl xs of
   S.EmptyL -> 0
@@ -68,7 +69,7 @@ sortCountSeqWith f xs = case S.viewl xs of
 data PartitionState a = PS Int Int (S.Seq a)
                         deriving (Show, Read, Eq)
 
--- | Produce a the initial state of a partition computation from a list.
+-- | Produce a the initial state of a partition computation from a sequence.
 initP :: Ord a => S.Seq a -> PartitionState a
 initP = PS 0 0
 
@@ -95,13 +96,13 @@ applyN :: Int -> (a -> a) -> a -> a
 applyN n f x = foldl' (flip ($)) x (replicate n f)
 
 -- | Given a function that takes a sequence to an index, return the sequence
--- with that index and 0 swapped.
+-- with that the elements at that index and 0 swapped.
 setPivot :: Ord a => (S.Seq a -> Int) => S.Seq a -> S.Seq a
 setPivot f xs = swap 0 (f xs) xs
 
--- | Swap two elements of a list. This function is partial as it is undefined
--- for list indices outside the range [0, length-1], but it only called from
--- stepPartition which always uses safe indices.
+-- | Swap two elements of a sequence. This function is partial as it is
+-- undefined for sequence indices outside the range [0, length-1], but it only
+-- called from stepPartition which always uses safe indices.
 swap :: Int -> Int -> S.Seq a -> S.Seq a
 swap i j xs = S.update j (S.index xs i) (S.update i (S.index xs j) xs)
 
