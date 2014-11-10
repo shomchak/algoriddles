@@ -11,7 +11,7 @@
 --                 ) where
 module QuickSeq where
 import qualified Data.Sequence as S
-import Data.Sequence (ViewL((:<)), (><))
+import Data.Sequence ( ViewL((:<)), ViewR((:>)), (<|), (><))
 import qualified Data.Foldable as F
 import Data.List (foldl')
 
@@ -40,7 +40,7 @@ sortSeqWith' :: Ord a => (S.Seq a -> Int) -> S.Seq a -> S.Seq a
 sortSeqWith' f xs = case S.viewl xs of
   S.EmptyL -> S.empty
   _        -> sortSeqWith' f lessers >< S.singleton p >< sortSeqWith' f greaters
-    where (lessers, greaters) = partitionWith f xs
+    where (lessers, greaters) = partition $ setPivot f xs
           p                   = S.index xs (f xs)
 
 -- | Return the number of comparisons required to sort the list.
@@ -51,6 +51,16 @@ sortCount = sortCountSeqWith (const 0) . S.fromList
 sortCountWith :: Ord a => (S.Seq a -> Int) -> [a] -> Int
 sortCountWith f = sortCountSeqWith f . S.fromList
 
+printSortCountSeqWith :: (Ord a, Show a) => (S.Seq a -> Int) -> S.Seq a -> IO Int
+printSortCountSeqWith f xs = case S.viewl xs of
+  S.EmptyL -> return 0
+  _        -> do
+    print xs
+    l <- printSortCountSeqWith f lessers
+    r <- printSortCountSeqWith f greaters
+    return $ l + r + S.length xs - 1
+      where (lessers, greaters) = partition $ setPivot f xs
+
 -- | Like sortCountWith for sequences.
 sortCountSeqWith :: Ord a => (S.Seq a -> Int) -> S.Seq a -> Int
 sortCountSeqWith f xs = case S.viewl xs of
@@ -58,7 +68,7 @@ sortCountSeqWith f xs = case S.viewl xs of
   _        -> sortCountSeqWith f lessers
               + sortCountSeqWith f greaters
               + S.length xs - 1
-    where (lessers, greaters) = partitionWith f xs
+    where (lessers, greaters) = partition $ setPivot f xs
 
 -- | A type representing the state of partitioning of a specific partition
 -- scheme where the pivot is the first element. For a PS i j S.Seq a,
@@ -83,13 +93,15 @@ stepP (PS i j xs) = case S.viewl xs of
       True  -> PS i (j+1) xs
       False -> PS (i+1) (j+1) $ swap (i+1) (j+1) xs
 
--- | Partition a Sequence using a function to return the index of the pivot.
-partitionWith :: Ord a => (S.Seq a -> Int) -> S.Seq a -> (S.Seq a, S.Seq a)
-partitionWith f xs = case S.viewl xs of
+-- | Partition a Sequence using the first element as the pivot.
+partition :: Ord a => S.Seq a -> (S.Seq a, S.Seq a)
+partition xs = case S.viewl xs of
   S.EmptyL -> (S.empty, S.empty)
-  _        -> S.splitAt i rest
-    where PS i _ sorted = applyN (S.length xs) stepP (initP $ setPivot f xs)
+  _        -> (lessers, greaters)
+    where PS i _ sorted = applyN (S.length xs) stepP (initP xs)
           (_:<rest)     = S.viewl sorted
+          (l, greaters) = S.splitAt i rest
+          lessers       = rightShift l
 
 -- | Apply a function n times.
 applyN :: Int -> (a -> a) -> a -> a
@@ -106,3 +118,7 @@ setPivot f xs = swap 0 (f xs) xs
 swap :: Int -> Int -> S.Seq a -> S.Seq a
 swap i j xs = S.update j (S.index xs i) (S.update i (S.index xs j) xs)
 
+rightShift :: S.Seq a -> S.Seq a
+rightShift xs = case S.viewr xs of
+  S.EmptyR   -> S.empty
+  (beg:>end) -> end <| beg
