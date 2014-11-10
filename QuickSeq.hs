@@ -2,14 +2,13 @@
 
 -- Implementations of quick sort using sequences under the hood.
 
--- module QuickSeq ( sort
---                 , sortSeq
---                 , sort'
---                 , sortWith'
---                 , sortCount
---                 , sortCountWith
---                 ) where
-module QuickSeq where
+module QuickSeq ( sort
+                , sortSeq
+                , sort'
+                , sortWith'
+                , sortCount
+                , sortCountWith
+                ) where
 import qualified Data.Sequence as S
 import Data.Sequence ( ViewL((:<)), ViewR((:>)), (<|), (><))
 import qualified Data.Foldable as F
