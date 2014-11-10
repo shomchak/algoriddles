@@ -51,6 +51,7 @@ sortCount = sortCountSeqWith (const 0) . S.fromList
 sortCountWith :: Ord a => (S.Seq a -> Int) -> [a] -> Int
 sortCountWith f = sortCountSeqWith f . S.fromList
 
+-- | Prints the input sequence and counts the comparisons.
 printSortCountSeqWith :: (Ord a, Show a) => (S.Seq a -> Int) -> S.Seq a -> IO Int
 printSortCountSeqWith f xs = case S.viewl xs of
   S.EmptyL -> return 0
@@ -118,6 +119,7 @@ setPivot f xs = swap 0 (f xs) xs
 swap :: Int -> Int -> S.Seq a -> S.Seq a
 swap i j xs = S.update j (S.index xs i) (S.update i (S.index xs j) xs)
 
+-- | Shift the sequence one element to the right.
 rightShift :: S.Seq a -> S.Seq a
 rightShift xs = case S.viewr xs of
   S.EmptyR   -> S.empty
