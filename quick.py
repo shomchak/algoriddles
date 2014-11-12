@@ -26,9 +26,9 @@ def partition(l):
             i += 1
     print 'g', l
     less = l[1:i]
-    if less:
-        less = swap(0, -1, less)
-    return less, l[i:]
+    # if less:
+    #     less = swap(0, -1, less)
+    return right_shift(less), l[i:]
 
 
 def set_pivot(f, l):
@@ -63,3 +63,9 @@ def median(l):
     if j[1] <= k[1] <= i[1] or j[1] >= k[1] >= i[1]:
         return k[0]
     return i[0]
+
+
+def right_shift(l):
+    if len(l) == 0:
+        return l
+    return [l[-1]] + l[:-1]
