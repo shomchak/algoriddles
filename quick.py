@@ -10,7 +10,6 @@ def sortCountWith(f, l):
     if length == 0:
         return 0
     lessers, greaters = partition(set_pivot(f, l))
-    print lessers, greaters
     return (length - 1) + sortCountWith(f, lessers) + sortCountWith(f, greaters)
 
 
@@ -24,10 +23,7 @@ def partition(l):
         if x <= pivot:
             swap(i, j, l)
             i += 1
-    print 'g', l
     less = l[1:i]
-    # if less:
-    #     less = swap(0, -1, less)
     return right_shift(less), l[i:]
 
 
