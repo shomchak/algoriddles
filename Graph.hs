@@ -6,3 +6,6 @@ data UnweightedGraph a = UGraph [[a]]
 
 fromList :: Eq a => [[a]] -> UnweightedGraph a
 fromList = UGraph
+
+toList :: Eq a => UnweightedGraph a -> [[a]]
+toList (UGraph nodes) = nodes
